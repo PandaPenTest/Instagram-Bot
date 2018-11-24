@@ -2,7 +2,7 @@
 
 import asyncio
 from InstagramAPI import InstagramAPI
-from aiogram import Bot, Dispatcher, executor
+from aiogram import Bot, Dispatcher, executor, types
 
 API_TOKEN = 'bot_token'
 LOGIN = 'instagram_login'
