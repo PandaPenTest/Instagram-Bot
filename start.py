@@ -1,10 +1,15 @@
 # -*- coding: utf-8 -*-
 
-import telebot
-from telebot.types import ForceReply
+import asyncio
 from InstagramAPI import InstagramAPI
+from aiogram import Bot, Dispatcher, executor
 
-bot = telebot.TeleBot("BOT_TOKEN")
+API_TOKEN = 'bot_token'
+LOGIN = 'instagram_login'
+PASSW = 'instagram_password'
+
+bot = Bot(token=API_TOKEN)
+dp = Dispatcher(bot)
 
 
 def isEnglish(s):
@@ -16,17 +21,18 @@ def isEnglish(s):
         return True
 
 
-def Info(m):
+async def Info(m):
+
+    _id = m.from_user.id
 
     if isEnglish(m.text) is False:
-        bot.send_message(m.chat.id, 'Non English charset found')
-        return ''
+        await bot.send_message(_id, 'Non English charset found')
+        return
+    elif 'http' in m.text:
+        await bot.send_message(_id, 'Bad input')
+        return
 
-    if 'http' in m.text:
-        bot.send_message(m.chat.id, 'Bad input')
-        return ''
-
-    insta = InstagramAPI('login', 'password')
+    insta = InstagramAPI(LOGIN, PASSW)
     status = insta.login()
 
     if status:
@@ -37,8 +43,8 @@ def Info(m):
             closed = True if dump['account_type'] == 1 else False
 
             if dump['is_private']:
-                bot.send_message(m.chat.id, 'This is closed account 🔒')
-                return ''
+                await bot.send_message(_id, 'This is closed account 🔒')
+                return
 
             text = '💁🏼‍Name: ' + dump['full_name'] \
                 + ' (' + dump['username'] + ')'
@@ -58,30 +64,18 @@ def Info(m):
                 'Following: ' + str(dump['following_count']) + '\n' + \
                 'Post`s: ' + str(dump['media_count'])
 
-            bot.send_message(m.chat.id, text)
+            await bot.send_message(_id, text)
 
         else:
-            bot.send_message(m.chat.id, 'Check login 👈🏼')
+            await bot.send_message(_id, 'Check login 👈🏼')
     else:
-        bot.send_message(m.chat.id, 'Troubleshoot with bot account...')
+        await bot.send_message(_id, 'Troubleshoot with bot account...')
 
 
-@bot.message_handler(commands=['start'])
-def on_start(m):
-    bot.send_message(m.chat.id, "Hello. Send Instagram username to me.")
+@dp.message_handler()
+async def check_language(message: types.Message):
+    await Info(message)
 
 
-@bot.message_handler()
-def main(message):
-    Info(message)
-
-
-def run():
-    try:
-        bot.polling(none_stop=True)
-    except:
-        run()
-
-
-if __name__ == "__main__":
-    run()
+if __name__ == '__main__':
+    executor.start_polling(dp, skip_updates=True)
