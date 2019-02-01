@@ -1,10 +1,14 @@
-import urllib3
-import asyncio
 from InstagramAPI import InstagramAPI
-from aiogram import Bot, Dispatcher, executor, types
+from aiogram import (Bot, Dispatcher, executor, types)
 
 
-urllib3.disable_warnings()
+API_TOKEN = ''
+
+LOGIN = ''
+PASSW = ''
+
+bot = Bot(token=API_TOKEN)
+dp = Dispatcher(bot)
 
 
 def isEnglish(s):
@@ -16,7 +20,21 @@ def isEnglish(s):
         return True
 
 
-async def Info(m):
+def special(txt):
+    sym = [
+        '*', '/', ')', '(', "'", '`', '!', '@', '#',
+        '$', '%', '^', '+', '~', '|', "\\", '?', ',',
+        '.', ':', ';', '{', '}', '[', ']'
+    ]
+
+    for l in sym:
+        if l in txt:
+            return True
+
+    return False
+
+
+async def info(m):
     _id = m.from_user.id
 
     if isEnglish(m.text) is False:
@@ -25,8 +43,10 @@ async def Info(m):
     elif 'http' in m.text:
         await bot.send_message(_id, 'Bad input. Only login.')
         return
-
-    if m.text == LOGIN:
+    elif special(m.text):
+        await bot.send_message(_id, 'Special charset detected! Bad.')
+        return
+    elif m.text == LOGIN:
         await bot.send_message(_id, 'This is closed account 🔒')
         return
 
@@ -64,23 +84,23 @@ async def Info(m):
     else:
         await bot.send_message(_id, 'Check login 👈🏼')
 
-    return
+
+@dp.message_handler(commands=['start'])
+async def hello(m: types.Message):
+    await bot.send_message(
+        m.from_user.id,
+        "Hello! Send Instagram username to me."
+    )
 
 
 @dp.message_handler()
-async def check_language(message: types.Message):
-    await Info(message)
+async def main(m: types.Message):
+    await info(m)
 
 
 if __name__ == '__main__':
-    API_TOKEN = 'API_KEY'
-    LOGIN = 'login'
-    PASSW = 'passw'
-
     inhe = InstagramAPI(LOGIN, PASSW)
     status = inhe.login()
 
     if status:
-        bot = Bot(token=API_TOKEN)
-        dp = Dispatcher(bot)
         executor.start_polling(dp, skip_updates=True)
