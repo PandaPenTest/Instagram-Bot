@@ -38,7 +38,7 @@ async def info(m):
     _id = m.from_user.id
 
     if isEnglish(m.text) is False:
-        await bot.send_message(_id, 'Non English charset found')
+        await bot.send_message(_id, 'Non English charset found! Bad.')
         return
     elif 'http' in m.text:
         await bot.send_message(_id, 'Bad input. Only login.')
@@ -48,6 +48,9 @@ async def info(m):
         return
     elif m.text == LOGIN:
         await bot.send_message(_id, 'This is closed account 🔒')
+        return
+    elif len(m.text) > 30:
+        await bot.send_message(_id, 'Username too long! Bad.')
         return
 
     insta = inhe
